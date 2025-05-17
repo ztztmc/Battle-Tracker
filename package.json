@@ -1,0 +1,21 @@
+{
+  "name": "battle-tracker-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0",
+    "env": "^0.0.2",
+    "mongoose": "^8.14.3",
+    "mysql2": "^3.14.1",
+    "node-fetch": "^3.3.2"
+  }
+}
