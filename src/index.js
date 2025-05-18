@@ -3,7 +3,7 @@ const { Client, GatewayIntentBits, Events, Collection, EmbedBuilder } = require(
 const fs = require('node:fs');
 const path = require('node:path');
 const mongoose = require("mongoose");
-const { startRotationCron } = require("./other/updateRotation.js");
+const { startPoolUpdaterCron } = require("./task/updateRotation.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -38,7 +38,7 @@ client.once(Events.ClientReady, async readyClient => {
   await mongoose.connect(process.env.MONGO_URI);
   console.log("✅ Connected to MongoDB");
 
-  startRotationCron(client);
+  startPoolUpdaterCron(client);
 });
 
 client.on(Events.InteractionCreate, async interaction => {
