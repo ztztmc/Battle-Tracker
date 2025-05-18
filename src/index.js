@@ -2,6 +2,8 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Events, Collection, EmbedBuilder } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
+const mongoose = require("mongoose");
+const { startRotationCron } = require("./other/updateRotation.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -31,8 +33,12 @@ for (const folder of commandFolders) {
   }
 }
 
-client.once(Events.ClientReady, readyClient => {
+client.once(Events.ClientReady, async readyClient => {
   console.log(`✅ Logged in as ${readyClient.user.tag}`);
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log("✅ Connected to MongoDB");
+
+  startRotationCron(client);
 });
 
 client.on(Events.InteractionCreate, async interaction => {
