@@ -60,8 +60,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
     const errorEmbed = new EmbedBuilder()
       .setColor(0xff0000) // Red color
-      .setTitle(`There was an error while executing the /${interaction.commandName} command!`)
-      .setTimestamp()
+      .setDescription(`### ${process.env.ICON_BLOCK} **An unexpected error occured.**\n\nCommand: \`/${interaction.commandName}\``)
       .setFooter({ text: 'This error has been reported. Please try again later.' });
 
     if (interaction.replied || interaction.deferred) {
@@ -74,8 +73,7 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
 
-    // Send the error details to the errors channel
-    const errorsChannelId = '1290353892806361273'; // Replace with your channel ID
+    const errorsChannelId = '1290353892806361273';
     const errorsChannel = client.channels.cache.get(errorsChannelId);
 
     if (errorsChannel) {
