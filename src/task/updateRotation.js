@@ -31,7 +31,7 @@ function chunkArray(array, size) {
 }
 
 function startPoolUpdaterCron(client) {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("0 9 * * *", async () => {
     try {
       const channel = await client.channels.fetch("1275151284067893414");
       const currentTime = new Date().toLocaleString();
