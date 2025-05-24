@@ -3,10 +3,7 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('join')
-    .setDescription('Join the daily BedWars challenge.')
-    .addStringOption(option =>
-      option.setName('ign').setDescription('Your Minecraft IGN').setRequired(true)
-    ),
+    .setDescription('Join the daily BedWars challenge.'),
 
   async execute(interaction) {
     await interaction.deferReply();

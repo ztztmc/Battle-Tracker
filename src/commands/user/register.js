@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const axios = require('axios');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,6 +15,24 @@ module.exports = {
     const username = interaction.user.username;
     const ign = interaction.options.getString('ign');
 
-    await interaction.editReply(`(testing register command) \nUser ID: ${userId}\nUsername: ${username}\n IGN: ${ign}\n`);
+    if(interaction.channelId == "1375877348464791643") {
+      const uuidRes = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${ign}`);
+      if(uuidRes.data.errorMessage) {
+        await interaction.editReply(`The username you entered does not exist. Please re-check the ign: ${ign}`);
+        return;
+      }
+      const correctIgn = uuidRes.data.name;
+      const uuid = uuidRes.data.id;
+
+      const hypRes = await axios.get(`https://api.hypixel.net/player?key=${process.env.HYPIXEL_API_KEY}&uuid=${uuid}`);
+      if(!hypRes.data.success) {
+        await interaction.editReply(`There was an error getting your information from the Hypixel API. Please try to register later.`);
+        return;
+      }
+      const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
+      await interaction.editReply(`register test\nyour disc: ${username} ign u entered: ${ign} mojang ign: ${correctIgn} disc in hyp: ${hypDisc} match: ${correctIgn == hypDisc}`);
+    } else {
+      await interaction.editReply(`${process.env.ICON_BLOCK} You cannot register here! Use </register:1373217367433285705> in <#1375877348464791643>`);
+    }
   }
 };
