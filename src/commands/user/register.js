@@ -32,7 +32,7 @@ module.exports = {
           const userDoesNotExistEmbed = new EmbedBuilder()
             .setColor(0xff0000) // Red color
             .setDescription(
-              `### ${process.env.ICON_BLOCK} **The username you entered does not exist.**\n\nPlease re-check the ign: ${ign}\``
+              `### ${process.env.ICON_BLOCK} **The username you entered does not exist.**\n\nPlease re-check the ign: **${ign}**`
             );
           await interaction.editReply({
             embeds: [userDoesNotExistEmbed],
@@ -59,7 +59,7 @@ module.exports = {
         const hypErrorEmbed = new EmbedBuilder()
           .setColor(0xff0000) // Red color
           .setDescription(
-            `### ${process.env.ICON_BLOCK} **An unexpected error occured.!**\n\nThere was an error getting your information from the Hypixel API.`
+            `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error getting your information from the Hypixel API.`
           )
           .setFooter({
             text: "This error has been reported. Please try again later.",
@@ -70,6 +70,25 @@ module.exports = {
         return;
       }
       const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
+
+      //if their discord does not match the discord in their hypixel account
+      if (hypDisc?.toLowerCase() === username.toLowerCase()) {
+        const accountLinkedEmbed = new EmbedBuilder()
+          .setColor("Green")
+          .setDescription(
+            `### ${process.env.ICON_CHECK} **You have been registered!**\nWelcome to **Battle Tracker**. Use </map:1374669634778959944> to see today's map and </join:1373213882663043124> to start!\nMore info in <#1277892888197599263>`
+          );
+      } else {
+        const hypDiscNotMatchEmbed = new EmbedBuilder()
+          .setColor(0xff0000) // Red color
+          .setDescription(
+            `### ${process.env.ICON_BLOCK} **Hypixel Discord mismatch**\n\nYour Discord account does not match the Discord account linked to Hypixel.\nLink your Discord account to Hypixel if it's not already linked.`
+          );
+        await interaction.editReply({
+          embeds: [hypDiscNotMatchEmbed],
+        });
+        return;
+      }
       await interaction.editReply(
         `register test\nyour disc: ${username} ign u entered: ${ign} mojang ign: ${correctIgn} disc in hyp: ${hypDisc} match: ${
           hypDisc?.toLowerCase() === username.toLowerCase()

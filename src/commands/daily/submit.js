@@ -1,16 +1,24 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('submit')
-    .setDescription('Submit your game for the daily BedWars challenge.'),
+    .setName("submit")
+    .setDescription(`Submit your game.`),
 
   async execute(interaction) {
     await interaction.deferReply();
     const userId = interaction.user.id;
     const username = interaction.user.username;
+    const formattedTime = "3:23";
 
-    // the a variable is used to cause an error to check if the error handling works
-    await interaction.editReply(`${a}(testing submit command) \nUser ID: ${userId}\nUsername: ${username}\n`);
-  }
+    const submittedEmbed = new EmbedBuilder()
+      .setColor("Green")
+      .setDescription(
+        `### ${process.env.ICON_CHECK} **Time submitted: ${formattedTime}**\n\nYou have completed today's challenge. Come back tomorrow for more!`
+      );
+
+    await interaction.editReply({
+      embeds: [submittedEmbed],
+    });
+  },
 };
