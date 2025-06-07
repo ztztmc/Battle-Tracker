@@ -71,13 +71,17 @@ module.exports = {
       }
       const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
 
-      //if their discord does not match the discord in their hypixel account
       if (hypDisc?.toLowerCase() === username.toLowerCase()) {
+        await interaction.member.setNickname(`[0] ${correctIgn}`);
         const accountLinkedEmbed = new EmbedBuilder()
           .setColor("Green")
           .setDescription(
             `### ${process.env.ICON_CHECK} **You have been registered!**\nWelcome to **Battle Tracker**. Use </map:1374669634778959944> to see today's map and </join:1373213882663043124> to start!\nMore info in <#1277892888197599263>`
           );
+        await interaction.editReply({
+          embeds: [accountLinkedEmbed],
+        });
+        return;
       } else {
         const hypDiscNotMatchEmbed = new EmbedBuilder()
           .setColor(0xff0000) // Red color
