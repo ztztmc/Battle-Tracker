@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const axios = require("axios");
+const PlayerSchema = require("../../models/player/player.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,7 +18,21 @@ module.exports = {
     const userId = interaction.user.id;
     const username = interaction.user.username;
     const ign = interaction.options.getString("ign");
+    const existingPlayer = await PlayerSchema.findOne({ userId });
 
+    if (existingPlayer) {
+      const alreadyRegisteredEmbed = new EmbedBuilder()
+        .setColor(0xff0000) // Red color
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You are already registered**\n\nYou cannot register again. If you want to change your IGN, please tag an admin.`
+        );
+
+      await interaction.editReply({
+        embeds: [alreadyRegisteredEmbed],
+      });
+
+      return;
+    }
     if (interaction.channelId == "1375877348464791643") {
       let uuid;
       let uuidRes;
@@ -32,7 +47,7 @@ module.exports = {
           const userDoesNotExistEmbed = new EmbedBuilder()
             .setColor(0xff0000) // Red color
             .setDescription(
-              `### ${process.env.ICON_BLOCK} **The username you entered does not exist.**\n\nPlease re-check the ign: **${ign}**`
+              `### ${process.env.ICON_BLOCK} **The username you entered does not exist**\n\nPlease re-check the ign: **${ign}**`
             );
           await interaction.editReply({
             embeds: [userDoesNotExistEmbed],
@@ -42,7 +57,7 @@ module.exports = {
           const mojangErrorEmbed = new EmbedBuilder()
             .setColor(0xff0000) // Red color
             .setDescription(
-              `### ${process.env.ICON_BLOCK} **An error occured.**\n\nThere was a problem connecting to the Mojang API. Please try again later.`
+              `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error connecting to the Mojang API. Please try again later.`
             );
           await interaction.editReply({
             embeds: [mojangErrorEmbed],
@@ -72,11 +87,29 @@ module.exports = {
       const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
 
       if (hypDisc?.toLowerCase() === username.toLowerCase()) {
+        const newPlayer = new Player({
+          discordId: userId,
+          discordUsername: username,
+          minecraftIGN: correctIgn,
+        });
+        await newPlayer.save().catch(async (err) => {
+          console.error("Error saving new player:", err);
+          const dbErrorEmbed = new EmbedBuilder()
+            .setColor("0xff0000")
+            .setDescription(
+              `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nWe were unable to register you due to a database error. Please try again later.`
+            );
+          await interaction.editReply({
+            embeds: [dbErrorEmbed],
+          });
+        });
+
         await interaction.member.setNickname(`[0] ${correctIgn}`);
+
         const accountLinkedEmbed = new EmbedBuilder()
           .setColor("Green")
           .setDescription(
-            `### ${process.env.ICON_CHECK} **You have been registered!**\nWelcome to **Battle Tracker**. Use </map:1374669634778959944> to see today's map and </join:1373213882663043124> to start!\nMore info in <#1277892888197599263>`
+            `### ${process.env.ICON_CHECK} **You have been registered!**\n\nWelcome to **Battle Tracker**. Use </map:1374669634778959944> to see today's map and </join:1373213882663043124> to start!\nMore info in <#1277892888197599263>`
           );
         await interaction.editReply({
           embeds: [accountLinkedEmbed],

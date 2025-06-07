@@ -1,17 +1,20 @@
-require('dotenv').config();
+require("dotenv").config();
 const cron = require("node-cron");
-const CurrentPool = require("../models/currentPool");
-const RotationMessage = require("../models/rotationMessage");
+const CurrentPool = require("../models/map-rotation/currentPool");
+const RotationMessage = require("../models/map-rotation/rotationMessage");
 const { fetchMapRotation } = require("../utils/fetchRotation");
 const { EmbedBuilder } = require("discord.js");
 const axios = require("axios");
 
 async function isSoloMap(mapName) {
   try {
-    const response = await axios.get("https://api.polsu.xyz/polsu/bedwars/map", {
-      params: { map: mapName },
-      headers: { 'API-Key': process.env.POLSU_API_KEY }
-    });
+    const response = await axios.get(
+      "https://api.polsu.xyz/polsu/bedwars/map",
+      {
+        params: { map: mapName },
+        headers: { "API-Key": process.env.POLSU_API_KEY },
+      }
+    );
 
     const mode = response.data?.data?.mode;
     return mode === "2";
@@ -50,12 +53,13 @@ function startPoolUpdaterCron(client) {
         return;
       }
 
-      const updatedMaps = current.maps
-        .filter(map => !rotation.leaving.includes(map));
+      const updatedMaps = current.maps.filter(
+        (map) => !rotation.leaving.includes(map)
+      );
 
       for (const map of rotation.entering) {
         const alreadyExists = updatedMaps.includes(map);
-        if (!alreadyExists && await isSoloMap(map)) {
+        if (!alreadyExists && (await isSoloMap(map))) {
           updatedMaps.push(map);
         }
       }
@@ -65,7 +69,7 @@ function startPoolUpdaterCron(client) {
       // Check if changed
       const same =
         updatedMaps.length === current.maps.length &&
-        updatedMaps.every(map => current.maps.includes(map));
+        updatedMaps.every((map) => current.maps.includes(map));
 
       if (same) return;
 
@@ -76,13 +80,17 @@ function startPoolUpdaterCron(client) {
       const chunks = chunkArray(updatedMaps, 10);
       const fields = chunks.map((group, index) => ({
         name: `Maps ${index * 10 + 1}–${index * 10 + group.length}`,
-        value: group.map(m => `- ${m}`).join("\n"),
-        inline: true
+        value: group.map((m) => `- ${m}`).join("\n"),
+        inline: true,
       }));
 
-      const poolChannel = await client.channels.fetch(process.env.MAP_POOL_CHANNEL_ID);
+      const poolChannel = await client.channels.fetch(
+        process.env.MAP_POOL_CHANNEL_ID
+      );
       const embed = new EmbedBuilder()
-        .setDescription(`### ${process.env.ICON_MAP} **Bedwars Maps (Solo/Doubles)**`)
+        .setDescription(
+          `### ${process.env.ICON_MAP} **Bedwars Maps (Solo/Doubles)**`
+        )
         .setColor("Green")
         .addFields(fields)
         .setFooter({ text: `Updates daily. Last updated: ${currentTime}` });
@@ -113,38 +121,54 @@ function startPoolUpdaterCron(client) {
         existing.lastRotationText = formattedPool;
         await existing.save();
       }
-      const updatesChannel = await client.channels.fetch(process.env.MAP_UPDATES_CHANNEL_ID);
+      const updatesChannel = await client.channels.fetch(
+        process.env.MAP_UPDATES_CHANNEL_ID
+      );
       const rotationEmbed = new EmbedBuilder()
-        .setDescription(`### ${process.env.ICON_REFRESH} **Bedwars Rotation Update**`)
+        .setDescription(
+          `### ${process.env.ICON_REFRESH} **Bedwars Rotation Update**`
+        )
         .setColor("Green")
         .addFields(
           {
             name: `${process.env.ICON_PLUS} Entering`,
-            value: rotation.entering.length ? rotation.entering.map(m => `${process.env.ICON_EMPTY} ${m}`).join("\n") : "None",
-            inline: true
+            value: rotation.entering.length
+              ? rotation.entering
+                  .map((m) => `${process.env.ICON_EMPTY} ${m}`)
+                  .join("\n")
+              : "None",
+            inline: true,
           },
           {
             name: `${process.env.ICON_MINUS} Leaving`,
-            value: rotation.leaving.length ? rotation.leaving.map(m => `${process.env.ICON_EMPTY} ${m}`).join("\n") : "None",
-            inline: true
+            value: rotation.leaving.length
+              ? rotation.leaving
+                  .map((m) => `${process.env.ICON_EMPTY} ${m}`)
+                  .join("\n")
+              : "None",
+            inline: true,
           }
-        )
-        const lastRotation = await RotationMessage.findOne({ type: "last_rotation" });
-        const newRotationText = `${rotation.entering.join(",")}::${rotation.leaving.join(",")}`;
-        
-        if (!lastRotation || lastRotation.lastRotationText !== newRotationText) {
-          await updatesChannel.send({ embeds: [rotationEmbed] });
-        
-          if (!lastRotation) {
-            await RotationMessage.create({
-              type: "last_rotation",
-              lastRotationText: newRotationText,
-            });
-          } else {
-            lastRotation.lastRotationText = newRotationText;
-            await lastRotation.save();
-          }
+        );
+      const lastRotation = await RotationMessage.findOne({
+        type: "last_rotation",
+      });
+      const newRotationText = `${rotation.entering.join(
+        ","
+      )}::${rotation.leaving.join(",")}`;
+
+      if (!lastRotation || lastRotation.lastRotationText !== newRotationText) {
+        await updatesChannel.send({ embeds: [rotationEmbed] });
+
+        if (!lastRotation) {
+          await RotationMessage.create({
+            type: "last_rotation",
+            lastRotationText: newRotationText,
+          });
+        } else {
+          lastRotation.lastRotationText = newRotationText;
+          await lastRotation.save();
         }
+      }
     } catch (err) {
       console.error("Error in daily rotation updater:", err);
       if (err.stack) console.error(err.stack);

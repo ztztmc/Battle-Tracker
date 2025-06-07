@@ -1,7 +1,13 @@
-require('dotenv').config();
-const { Client, GatewayIntentBits, Events, Collection, EmbedBuilder } = require('discord.js');
-const fs = require('node:fs');
-const path = require('node:path');
+require("dotenv").config();
+const {
+  Client,
+  GatewayIntentBits,
+  Events,
+  Collection,
+  EmbedBuilder,
+} = require("discord.js");
+const fs = require("node:fs");
+const path = require("node:path");
 const mongoose = require("mongoose");
 const { startPoolUpdaterCron } = require("./task/updateRotation.js");
 
@@ -11,42 +17,48 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const foldersPath = path.join(__dirname, 'commands');
+const foldersPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
   const commandsPath = path.join(foldersPath, folder);
   const commandFiles = fs
     .readdirSync(commandsPath)
-    .filter(file => file.endsWith('.js'));
+    .filter((file) => file.endsWith(".js"));
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
-    if ('data' in command && 'execute' in command) {
+    if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
     } else {
       console.log(
-        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`,
+        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
       );
     }
   }
 }
 
-client.once(Events.ClientReady, async readyClient => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`✅ Logged in as ${readyClient.user.tag}`);
   await mongoose.connect(process.env.MONGO_URI);
   console.log("✅ Connected to MongoDB");
 
+  //send to #bot-startup-log channel
+  const botStartupLogChannel = await client.channels.fetch(
+    "1288827649904476251"
+  );
+  botStartupLogChannel.send(`## ${process.env.ICON_REFRESH} **Bot Restarted**`);
+
   startPoolUpdaterCron(client);
 });
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = interaction.client.commands.get(interaction.commandName);
   if (!command) {
     console.error(
-      `[ERROR] No command matching ${interaction.commandName} was found.`,
+      `[ERROR] No command matching ${interaction.commandName} was found.`
     );
     return;
   }
@@ -55,13 +67,17 @@ client.on(Events.InteractionCreate, async interaction => {
   } catch (error) {
     console.error(
       `[ERROR] Error executing command ${interaction.commandName}:`,
-      error,
+      error
     );
 
     const errorEmbed = new EmbedBuilder()
       .setColor(0xff0000) // Red color
-      .setDescription(`### ${process.env.ICON_BLOCK} **An unexpected error occured.**\n\nCommand: \`/${interaction.commandName}\``)
-      .setFooter({ text: 'This error has been reported. Please try again later.' });
+      .setDescription(
+        `### ${process.env.ICON_BLOCK} **An unexpected error occured.**\n\nCommand: \`/${interaction.commandName}\``
+      )
+      .setFooter({
+        text: "This error has been reported. Please try again later.",
+      });
 
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
@@ -73,28 +89,36 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
 
-    const errorsChannelId = '1290353892806361273';
+    const errorsChannelId = "1290353892806361273";
     const errorsChannel = client.channels.cache.get(errorsChannelId);
 
     if (errorsChannel) {
       const errorEmbed = new EmbedBuilder()
         .setColor(0xff0000) // Red color
-        .setTitle('Command Error Report')
+        .setTitle("Command Error Report")
         .setDescription(`An error occurred while executing a command.`)
         .addFields(
-          { name: 'User', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
-          { name: 'Command', value: `/${interaction.commandName}`, inline: true },
-          { name: 'Error', value: `\`\`\`${error}\`\`\`` },
+          {
+            name: "User",
+            value: `${interaction.user.tag} (${interaction.user.id})`,
+            inline: true,
+          },
+          {
+            name: "Command",
+            value: `/${interaction.commandName}`,
+            inline: true,
+          },
+          { name: "Error", value: `\`\`\`${error}\`\`\`` }
         )
         .setTimestamp();
 
       await errorsChannel.send({ embeds: [errorEmbed] });
     } else {
-      console.error(`[ERROR] Admin channel with ID ${errorsChannelId} not found.`);
-    }
-
+      console.error(
+        `[ERROR] Admin channel with ID ${errorsChannelId} not found.`
+      );
     }
   }
-);
+});
 
 client.login(process.env.DISCORD_TOKEN);
