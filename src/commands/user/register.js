@@ -62,6 +62,8 @@ module.exports = {
           await interaction.editReply({
             embeds: [mojangErrorEmbed],
           });
+
+          return;
         }
       }
 
@@ -72,7 +74,7 @@ module.exports = {
       );
       if (!hypRes.data.success) {
         const hypErrorEmbed = new EmbedBuilder()
-          .setColor(0xff0000) // Red color
+          .setColor(0xff0000)
           .setDescription(
             `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error getting your information from the Hypixel API.`
           )
@@ -87,15 +89,16 @@ module.exports = {
       const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
 
       if (hypDisc?.toLowerCase() === username.toLowerCase()) {
-        const newPlayer = new Player({
+        const newPlayer = new PlayerSchema({
           discordId: userId,
           discordUsername: username,
           minecraftIGN: correctIgn,
+          minecraftUUID: uuid,
         });
         await newPlayer.save().catch(async (err) => {
           console.error("Error saving new player:", err);
           const dbErrorEmbed = new EmbedBuilder()
-            .setColor("0xff0000")
+            .setColor(0xff0000)
             .setDescription(
               `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nWe were unable to register you due to a database error. Please try again later.`
             );
@@ -126,11 +129,6 @@ module.exports = {
         });
         return;
       }
-      await interaction.editReply(
-        `register test\nyour disc: ${username} ign u entered: ${ign} mojang ign: ${correctIgn} disc in hyp: ${hypDisc} match: ${
-          hypDisc?.toLowerCase() === username.toLowerCase()
-        }`
-      );
     } else {
       const wrongChannelEmbed = new EmbedBuilder()
         .setColor(0xff0000) // Red color

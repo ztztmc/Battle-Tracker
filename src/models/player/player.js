@@ -5,6 +5,7 @@ const playerSchema = new mongoose.Schema(
     discordId: { type: String, required: true, unique: true },
     discordUsername: { type: String, required: true },
     minecraftIGN: { type: String, required: true },
+    minecraftUUID: { type: String, required: true },
     points: { type: Number, default: 0 },
     rank: { type: Number, default: -1 },
     fastestGameTime: { type: Number, default: null },
