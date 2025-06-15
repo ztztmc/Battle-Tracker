@@ -1,7 +1,7 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const axios = require("axios");
 const PlayerSchema = require("../../models/player/player.js");
-const DailyChallenge = require("../../models/DailyChallenge");
+const DailyChallenge = require("../../models/player/DailyChallenge");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -31,7 +31,7 @@ module.exports = {
     }
 
     const existingChallenge = await DailyChallenge.findOne({
-      discordId,
+      userId,
       date: today,
     });
     if (existingChallenge) {
@@ -69,7 +69,7 @@ module.exports = {
 
     const stats = hypRes.data.player?.stats?.Bedwars;
     const newChallenge = new DailyChallenge({
-      discordId,
+      userId,
       date: today,
       startGamesPlayed: stats.games_played_bedwars || 0,
       startFinalKills: stats.final_kills_bedwars || 0,

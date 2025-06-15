@@ -22,7 +22,7 @@ module.exports = {
 
     if (existingPlayer) {
       const alreadyRegisteredEmbed = new EmbedBuilder()
-        .setColor(0xff0000) // Red color
+        .setColor(0xff0000)
         .setDescription(
           `### ${process.env.ICON_BLOCK} **You are already registered**\n\nYou cannot register again. If you want to change your IGN, please tag an admin.`
         );
@@ -37,15 +37,13 @@ module.exports = {
       let uuid;
       let uuidRes;
       try {
-        uuidRes = await axios.get(
-          `https://api.mojang.com/users/profiles/minecraft/${ign}`
-        );
+        uuidRes = await axios.get(`https://api.minetools.eu/uuid/${ign}`);
         uuid = uuidRes.data.id;
       } catch (err) {
         if (err.response && err.response.status === 404) {
           console.log("couldn't find ign:", ign);
           const userDoesNotExistEmbed = new EmbedBuilder()
-            .setColor(0xff0000) // Red color
+            .setColor(0xff0000)
             .setDescription(
               `### ${process.env.ICON_BLOCK} **The username you entered does not exist**\n\nPlease re-check the ign: **${ign}**`
             );
@@ -55,9 +53,9 @@ module.exports = {
           return;
         } else {
           const mojangErrorEmbed = new EmbedBuilder()
-            .setColor(0xff0000) // Red color
+            .setColor(0xff0000)
             .setDescription(
-              `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error connecting to the Mojang API. Please try again later.`
+              `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error while trying to get your UUID. Please try again later.`
             );
           await interaction.editReply({
             embeds: [mojangErrorEmbed],
@@ -86,11 +84,26 @@ module.exports = {
         });
         return;
       }
+      if (
+        !hypRes.data.player.socialMedia ||
+        !hypRes.data.player.socialMedia.links ||
+        !hypRes.data.player.socialMedia.links.DISCORD
+      ) {
+        const hypNoDiscEmbed = new EmbedBuilder()
+          .setColor(0xff0000)
+          .setDescription(
+            `### ${process.env.ICON_BLOCK} **You need to link your Discord account to Hypixel**\n\nPlease link your Discord account to Hypixel in order to register.\nYou can do so by joining Hypixel, opening your profile and clicking on Social Media.`
+          );
+        await interaction.editReply({
+          embeds: [hypNoDiscEmbed],
+        });
+        return;
+      }
       const hypDisc = hypRes.data.player.socialMedia.links.DISCORD;
 
       if (hypDisc?.toLowerCase() === username.toLowerCase()) {
         const newPlayer = new PlayerSchema({
-          discordId: userId,
+          userId: userId,
           discordUsername: username,
           minecraftIGN: correctIgn,
           minecraftUUID: uuid,
@@ -107,7 +120,8 @@ module.exports = {
           });
         });
 
-        await interaction.member.setNickname(`[0] ${correctIgn}`);
+        if (userId !== "490064167181746177")
+          await interaction.member.setNickname(`[0] ${correctIgn}`);
 
         const accountLinkedEmbed = new EmbedBuilder()
           .setColor("Green")
@@ -120,10 +134,13 @@ module.exports = {
         return;
       } else {
         const hypDiscNotMatchEmbed = new EmbedBuilder()
-          .setColor(0xff0000) // Red color
+          .setColor(0xff0000)
           .setDescription(
             `### ${process.env.ICON_BLOCK} **Hypixel Discord mismatch**\n\nYour Discord account does not match the Discord account linked to Hypixel.\nLink your Discord account to Hypixel if it's not already linked.`
-          );
+          )
+          .setFooter({
+            text: `Expected: **${username}**# Found: **${hypDisc}**`,
+          });
         await interaction.editReply({
           embeds: [hypDiscNotMatchEmbed],
         });
@@ -131,7 +148,7 @@ module.exports = {
       }
     } else {
       const wrongChannelEmbed = new EmbedBuilder()
-        .setColor(0xff0000) // Red color
+        .setColor(0xff0000)
         .setDescription(
           `### ${process.env.ICON_BLOCK} **You cannot register here!**\n\nUse </register:1373217367433285705> in <#1375877348464791643>`
         );

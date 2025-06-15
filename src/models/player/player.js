@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const playerSchema = new mongoose.Schema(
   {
-    discordId: { type: String, required: true, unique: true },
+    userId: { type: String, required: true, unique: true },
     discordUsername: { type: String, required: true },
     minecraftIGN: { type: String, required: true },
     minecraftUUID: { type: String, required: true },
