@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const axios = require("axios");
 const PlayerSchema = require("../../models/player/player.js");
-const DailyChallenge = require("../../models/player/DailyChallenge");
+const DailyChallenge = require("../../models/player/dailyChallenge.js");
 
 module.exports = {
   data: new SlashCommandBuilder()

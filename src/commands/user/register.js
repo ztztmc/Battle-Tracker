@@ -123,6 +123,12 @@ module.exports = {
         if (userId !== "490064167181746177")
           await interaction.member.setNickname(`[0] ${correctIgn}`);
 
+        const role = interaction.client.guilds.cache.find(
+          (r) => r.name == "Registered"
+        );
+
+        await interaction.member.roles.add(role);
+
         const accountLinkedEmbed = new EmbedBuilder()
           .setColor("Green")
           .setDescription(
