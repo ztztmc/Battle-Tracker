@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dailyChallengeSchema = new mongoose.Schema(
   {
     userId: { type: String, required: true },
+    discordUsername: { type: String, required: true },
     date: { type: String, required: true },
     startGamesPlayed: Number,
     startFinalKills: Number,

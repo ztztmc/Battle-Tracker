@@ -53,6 +53,11 @@ client.once(Events.ClientReady, async (readyClient) => {
   startPoolUpdaterCron(client);
 });
 
+//cooldown
+const hypixelCooldown = new Map(); // userId -> timestamp
+const cooldownCommands = ["register", "join", "submit"];
+const cooldownSeconds = 20;
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = interaction.client.commands.get(interaction.commandName);
@@ -62,6 +67,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
     return;
   }
+
+  const userId = interaction.user.id;
+  const now = Date.now();
+
+  if (cooldownCommands.includes(command.data.name)) {
+    const lastUsed = hypixelCooldown.get(userId);
+    if (lastUsed && now - lastUsed < cooldownSeconds * 1000) {
+      const remaining = (
+        (cooldownSeconds * 1000 - (now - lastUsed)) /
+        1000
+      ).toFixed(1);
+      interaction.reply({
+        content: `⏳ You're doing that too quickly! Please wait **${remaining}s** before using another command.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    hypixelCooldown.set(userId, now);
+    setTimeout(() => hypixelCooldown.delete(userId), cooldownSeconds * 1000);
+  }
+
   try {
     await command.execute(interaction);
   } catch (error) {
@@ -71,7 +98,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     );
 
     const errorEmbed = new EmbedBuilder()
-      .setColor(0xff0000) // Red color
+      .setColor(0xff0000)
       .setDescription(
         `### ${process.env.ICON_BLOCK} **An unexpected error occured.**\n\nCommand: \`/${interaction.commandName}\``
       )

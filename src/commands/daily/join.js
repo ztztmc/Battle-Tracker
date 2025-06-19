@@ -70,6 +70,7 @@ module.exports = {
     const stats = hypRes.data.player?.stats?.Bedwars;
     const newChallenge = new DailyChallenge({
       userId,
+      discordUsername: username,
       date: today,
       startGamesPlayed: stats.games_played_bedwars || 0,
       startFinalKills: stats.final_kills_bedwars || 0,
