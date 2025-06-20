@@ -83,7 +83,7 @@ module.exports = {
     const startedEmbed = new EmbedBuilder()
       .setColor("Green")
       .setDescription(
-        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map ${mapName} and use </submit:1373216244169441321>`
+        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map ${mapName} and then </submit:1373216244169441321>`
       );
 
     await interaction.editReply({

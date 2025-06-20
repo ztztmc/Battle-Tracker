@@ -48,6 +48,7 @@ module.exports = {
       return;
     }
 
+    const rawGameTime = "323"; // Placeholder for the actual game time
     const formattedTime = "3:23"; // Placeholder for the actual game time
 
     if (dailyChallenge.finishedToday) {
@@ -64,6 +65,10 @@ module.exports = {
       return;
     }
 
+    dailyChallenge.finishedToday = true;
+    dailyChallenge.rawGameTime = formattedTime;
+    await dailyChallenge.save();
+
     const submittedEmbed = new EmbedBuilder()
       .setColor("Green")
       .setDescription(
@@ -73,5 +78,25 @@ module.exports = {
     await interaction.editReply({
       embeds: [submittedEmbed],
     });
+
+    if (
+      !registeredPlayer.fastestGameTime ||
+      rawGameTime < registeredPlayer.fastestGameTime
+    ) {
+      const oldPB = registeredPlayer.fastestGameTime;
+      registeredPlayer.fastestGameTime = rawGameTime;
+      const personalBestEmbed = new EmbedBuilder()
+        .setColor("Green")
+        .setDescription(
+          `### ${process.env.ICON_TROPHY} **New personal best!**\n\nYour new fastest game time is \`\`\`${formattedTime}\`\`\`\nYour previous personal best was \`\`\`${oldPB}\`\`\``
+        );
+
+      await interaction.editReply({
+        embeds: [personalBestEmbed],
+      });
+    }
+
+    registeredPlayer.totalGamesSubmitted += 1;
+    await registeredPlayer.save();
   },
 };

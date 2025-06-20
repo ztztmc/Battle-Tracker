@@ -78,8 +78,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
         (cooldownSeconds * 1000 - (now - lastUsed)) /
         1000
       ).toFixed(1);
+      const cooldownEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You're doing that too quickly!**\n\nPlease wait **${remaining}s** before using another command.`
+        );
       interaction.reply({
-        content: `⏳ You're doing that too quickly! Please wait **${remaining}s** before using another command.`,
+        embeds: [cooldownEmbed],
         ephemeral: true,
       });
       return;
