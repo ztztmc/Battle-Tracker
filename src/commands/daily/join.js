@@ -38,7 +38,7 @@ module.exports = {
       const existingChallengeEmbed = new EmbedBuilder()
         .setColor(0xff0000)
         .setDescription(
-          `### ${process.env.ICON_BLOCK} **You’ve already joined today’s challenge**\n\nComplete your game on ${mapName} and use </submit:1373216244169441321> when ready`
+          `### ${process.env.ICON_BLOCK} **You’ve already joined today’s challenge**\n\nComplete your game on **${mapName}** and use </submit:1373216244169441321> when ready`
         );
 
       await interaction.editReply({
@@ -83,7 +83,7 @@ module.exports = {
     const startedEmbed = new EmbedBuilder()
       .setColor("Green")
       .setDescription(
-        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map ${mapName} and then </submit:1373216244169441321>`
+        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map **${mapName}** then use </submit:1373216244169441321>`
       );
 
     await interaction.editReply({

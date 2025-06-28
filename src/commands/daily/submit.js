@@ -48,14 +48,14 @@ module.exports = {
       return;
     }
 
-    const rawGameTime = "323"; // Placeholder for the actual game time
-    const formattedTime = "3:23"; // Placeholder for the actual game time
+    const rawGameTime = "313"; // Placeholder for the actual game time
+    const formattedTime = "3:13"; // Placeholder for the actual game time
 
     if (dailyChallenge.finishedToday) {
       const alreadySubmittedEmbed = new EmbedBuilder()
         .setColor(0xff0000)
         .setDescription(
-          `### ${process.env.ICON_BLOCK} **You’ve already submitted your game for today**\n\nYour submitted time was \`\`\`${formattedTime}\`\`\`\nCome back tomorrow for more!`
+          `### ${process.env.ICON_BLOCK} **You’ve already submitted your game for today**\n\nYour submitted time was \`${formattedTime}\`\nCome back tomorrow for more!`
         );
 
       await interaction.editReply({
@@ -66,37 +66,43 @@ module.exports = {
     }
 
     dailyChallenge.finishedToday = true;
-    dailyChallenge.rawGameTime = formattedTime;
+    dailyChallenge.rawGameTime = rawGameTime;
     await dailyChallenge.save();
 
     const submittedEmbed = new EmbedBuilder()
       .setColor("Green")
       .setDescription(
-        `### ${process.env.ICON_CHECK} **Time submitted: ${formattedTime}**\n\nYou have completed today's challenge. Come back tomorrow for more!`
+        `### ${process.env.ICON_CHECK} **Time submitted: \`${formattedTime}\`**\n\nYou have completed today's challenge. Come back tomorrow for more!`
       );
 
-    await interaction.editReply({
-      embeds: [submittedEmbed],
-    });
+    let sendPersonalBestEmbed = false;
+    let personalBestEmbed;
 
     if (
-      !registeredPlayer.fastestGameTime ||
+      registeredPlayer.fastestGameTime != null &&
       rawGameTime < registeredPlayer.fastestGameTime
     ) {
       const oldPB = registeredPlayer.fastestGameTime;
       registeredPlayer.fastestGameTime = rawGameTime;
-      const personalBestEmbed = new EmbedBuilder()
+      personalBestEmbed = new EmbedBuilder()
         .setColor("Green")
         .setDescription(
-          `### ${process.env.ICON_TROPHY} **New personal best!**\n\nYour new fastest game time is \`\`\`${formattedTime}\`\`\`\nYour previous personal best was \`\`\`${oldPB}\`\`\``
+          `### ${process.env.ICON_TROPHY} **New personal best!**\n\nYour new fastest game time is \`${formattedTime}\`\nYour previous personal best was \`${oldPB}\``
         );
-
-      await interaction.editReply({
-        embeds: [personalBestEmbed],
-      });
+      sendPersonalBestEmbed = true;
     }
 
     registeredPlayer.totalGamesSubmitted += 1;
     await registeredPlayer.save();
+
+    if (!sendPersonalBestEmbed) {
+      await interaction.editReply({
+        embeds: [submittedEmbed],
+      });
+    } else {
+      await interaction.editReply({
+        embeds: [submittedEmbed, personalBestEmbed],
+      });
+    }
   },
 };

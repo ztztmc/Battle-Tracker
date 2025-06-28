@@ -13,7 +13,7 @@ const dailyChallengeSchema = new mongoose.Schema(
     disqualified: { type: Boolean, default: false },
     finishedToday: { type: Boolean, default: false },
 
-    rawGameTime: Number,
+    rawGameTime: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
