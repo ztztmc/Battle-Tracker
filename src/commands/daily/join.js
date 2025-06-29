@@ -13,7 +13,7 @@ module.exports = {
     const today = new Date().toISOString().split("T")[0];
     const userId = interaction.user.id;
     const username = interaction.user.username;
-    const mapName = "Slumber";
+    const mapName = "Polygon";
 
     const registeredPlayer = await PlayerSchema.findOne({ userId });
     if (!registeredPlayer) {
@@ -53,15 +53,40 @@ module.exports = {
       `https://api.hypixel.net/player?key=${process.env.HYPIXEL_API_KEY}&uuid=${uuid}`
     );
 
-    if (!hypRes.data.success) {
+    const hypRecentGamesRes = await axios.get(
+      `https://api.hypixel.net/recentgames?key=${process.env.HYPIXEL_API_KEY}&uuid=${uuid}`
+    );
+
+    if (!hypRes.data.success || !hypRecentGamesRes.data.success) {
       const hypixelErrorEmbed = new EmbedBuilder()
         .setColor(0xff0000)
         .setDescription(
-          `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nnThere was an error getting your information from the Hypixel API.`
+          `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error getting your information from the Hypixel API.\nPlease try again later.`
         );
 
       await interaction.editReply({
         embeds: [hypixelErrorEmbed],
+      });
+
+      return;
+    }
+
+    const ongoingGame = hypRecentGamesRes.data.games.find(
+      (game) =>
+        game.gameType === "BEDWARS" &&
+        game.mode === "BEDWARS_EIGHT_ONE" &&
+        !game.ended
+    );
+
+    if (ongoingGame) {
+      const ongoingGameEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have an ongoing game**\n\nPlease wait for your ongoing game on **${ongoingGame.map}** to finish before joining a new challenge.\nUse \`/games\` on hypixel to view your recent games.`
+        );
+
+      await interaction.editReply({
+        embeds: [ongoingGameEmbed],
       });
 
       return;

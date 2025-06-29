@@ -3,6 +3,25 @@ const axios = require("axios");
 const PlayerSchema = require("../../models/player/player.js");
 const DailyChallenge = require("../../models/player/dailyChallenge.js");
 
+function convertMSToTime(millisec) {
+  var seconds = (millisec / 1000).toFixed(0);
+  var minutes = Math.floor(seconds / 60);
+  var hours = "";
+  if (minutes > 59) {
+    hours = Math.floor(minutes / 60);
+    hours = hours >= 10 ? hours : "0" + hours;
+    minutes = minutes - hours * 60;
+    minutes = minutes >= 10 ? minutes : "0" + minutes;
+  }
+
+  seconds = Math.floor(seconds % 60);
+  seconds = seconds >= 10 ? seconds : "0" + seconds;
+  if (hours != "") {
+    return hours + ":" + minutes + ":" + seconds;
+  }
+  return minutes + ":" + seconds;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("submit")
@@ -13,6 +32,7 @@ module.exports = {
     const today = new Date().toISOString().split("T")[0];
     const userId = interaction.user.id;
     const username = interaction.user.username;
+    const mapName = "Polygon";
 
     const registeredPlayer = await PlayerSchema.findOne({ userId });
     if (!registeredPlayer) {
@@ -48,9 +68,6 @@ module.exports = {
       return;
     }
 
-    const rawGameTime = "313"; // Placeholder for the actual game time
-    const formattedTime = "3:13"; // Placeholder for the actual game time
-
     if (dailyChallenge.finishedToday) {
       const alreadySubmittedEmbed = new EmbedBuilder()
         .setColor(0xff0000)
@@ -65,6 +82,140 @@ module.exports = {
       return;
     }
 
+    const uuid = registeredPlayer.minecraftUUID;
+    const hypRes = await axios.get(
+      `https://api.hypixel.net/player?key=${process.env.HYPIXEL_API_KEY}&uuid=${uuid}`
+    );
+
+    const hypRecentGamesRes = await axios.get(
+      `https://api.hypixel.net/recentgames?key=${process.env.HYPIXEL_API_KEY}&uuid=${uuid}`
+    );
+
+    if (!hypRes.data.success || !hypRecentGamesRes.data.success) {
+      const hypixelErrorEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **An unexpected error occured**\n\nThere was an error getting your information from the Hypixel API.\nPlease try again later.`
+        );
+
+      await interaction.editReply({
+        embeds: [hypixelErrorEmbed],
+      });
+
+      return;
+    }
+
+    const stats = hypRes.data.player?.stats?.Bedwars;
+
+    if (stats.games_played_bedwars == dailyChallenge.startGamesPlayed) {
+      const noGamePlayedEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have not played a game**\n\nYou need to play at least 1 game to submit your time.`
+        );
+
+      await interaction.editReply({
+        embeds: [noGamePlayedEmbed],
+      });
+
+      return;
+    }
+
+    if (stats.games_played_bedwars - dailyChallenge.startGamesPlayed !== 1) {
+      dailyChallenge.finishedToday = true;
+      dailyChallenge.disqualified = true;
+      await dailyChallenge.save();
+      const disqualifiedEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have been disqualified**\n\nYou played more than 1 game.\nYou can try again tomorrow!`
+        );
+
+      await interaction.editReply({
+        embeds: [disqualifiedEmbed],
+      });
+
+      return;
+    }
+
+    const ongoingGame = hypRecentGamesRes.data.games.find(
+      (game) =>
+        game.gameType === "BEDWARS" &&
+        game.mode === "BEDWARS_EIGHT_ONE" &&
+        !game.ended
+    );
+
+    if (ongoingGame) {
+      const ongoingGameEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have an ongoing game**\n\nPlease wait for your ongoing game on **${ongoingGame.map}** to finish before submitting.\nUse /games on hypixel to view your recent games.`
+        );
+
+      await interaction.editReply({
+        embeds: [ongoingGameEmbed],
+      });
+
+      return;
+    }
+
+    const recentGames = hypRecentGamesRes.data.games;
+    const lastGame = recentGames[0];
+
+    if (
+      lastGame.gameType !== "BEDWARS" ||
+      lastGame.mode !== "BEDWARS_EIGHT_ONE"
+    ) {
+      dailyChallenge.finishedToday = true;
+      dailyChallenge.disqualified = true;
+      await dailyChallenge.save();
+
+      const notCorrectGameEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have been disqualified**\n\nYour last completed game was not a Solo Bedwars game.\nYou can try again tomorrow!`
+        );
+
+      await interaction.editReply({
+        embeds: [notCorrectGameEmbed],
+      });
+
+      return;
+    }
+
+    if (lastGame.map !== mapName) {
+      dailyChallenge.finishedToday = true;
+      dailyChallenge.disqualified = true;
+      await dailyChallenge.save();
+
+      const notCorrectMapEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
+        .setDescription(
+          `### ${process.env.ICON_BLOCK} **You have been disqualified**\n\nYour game was not on the correct map.\nYou can try again tomorrow!\n\nMap required: **${mapName}**\nMap Played: **${lastGame.map}**`
+        );
+      await interaction.editReply({
+        embeds: [notCorrectMapEmbed],
+      });
+      return;
+    }
+
+    const finalKillsNew = stats.final_kills_bedwars || 0;
+    const bedsBrokenNew = stats.beds_broken_bedwars || 0;
+    const winsNew = stats.wins_bedwars || 0;
+    let lostGame = false;
+
+    let rawGameTime = lastGame.ended - lastGame.date;
+
+    if (winsNew == dailyChallenge.startWins) {
+      rawGameTime += 300000;
+      lostGame = true;
+    }
+
+    rawGameTime -= (finalKillsNew - dailyChallenge.startFinalKills) * 5000;
+    rawGameTime -= (bedsBrokenNew - dailyChallenge.startBedsBroken) * 5000;
+
+    const formattedTime = convertMSToTime(rawGameTime);
+
     dailyChallenge.finishedToday = true;
     dailyChallenge.rawGameTime = rawGameTime;
     await dailyChallenge.save();
@@ -74,6 +225,12 @@ module.exports = {
       .setDescription(
         `### ${process.env.ICON_CHECK} **Time submitted: \`${formattedTime}\`**\n\nYou have completed today's challenge. Come back tomorrow for more!`
       );
+
+    if (lostGame) {
+      submittedEmbed.setFooter({
+        text: "You lost the game, so 5 minutes have been added to your time",
+      });
+    }
 
     let sendPersonalBestEmbed = false;
     let personalBestEmbed;

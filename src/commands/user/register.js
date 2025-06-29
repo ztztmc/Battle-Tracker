@@ -37,7 +37,9 @@ module.exports = {
       let uuid;
       let uuidRes;
       try {
-        uuidRes = await axios.get(`https://api.minetools.eu/uuid/${ign}`);
+        uuidRes = await axios.get(
+          `https://api.mojang.com/users/profiles/minecraft/${ign}`
+        );
         uuid = uuidRes.data.id;
       } catch (err) {
         if (err.response && err.response.status === 404) {
@@ -52,6 +54,7 @@ module.exports = {
           });
           return;
         } else {
+          console.log("Error fetching UUID:", err);
           const mojangErrorEmbed = new EmbedBuilder()
             .setColor(0xff0000)
             .setDescription(
@@ -123,9 +126,7 @@ module.exports = {
         if (userId !== "490064167181746177")
           await interaction.member.setNickname(`[0] ${correctIgn}`);
 
-        const role = interaction.client.guilds.cache.find(
-          (r) => r.name == "Registered"
-        );
+        const role = interaction.guild.roles.cache.get("1290370551369568377");
 
         await interaction.member.roles.add(role);
 
