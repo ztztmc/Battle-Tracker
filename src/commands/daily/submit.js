@@ -31,7 +31,6 @@ module.exports = {
     await interaction.deferReply();
     const today = new Date().toISOString().split("T")[0];
     const userId = interaction.user.id;
-    const username = interaction.user.username;
     const mapName = "Polygon";
 
     const registeredPlayer = await PlayerSchema.findOne({ userId });
