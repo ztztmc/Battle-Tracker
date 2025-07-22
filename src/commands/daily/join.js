@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const axios = require("axios");
 const PlayerSchema = require("../../models/player/player.js");
 const DailyChallenge = require("../../models/player/dailyChallenge.js");
+const GlobalData = require("../../models/globalData.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,7 +14,13 @@ module.exports = {
     const today = new Date().toISOString().split("T")[0];
     const userId = interaction.user.id;
     const username = interaction.user.username;
-    const mapName = "Polygon";
+    let { currentMap } = await GlobalData.findOne({});
+    if (!currentMap) {
+      await interaction.editReply(
+        `### ${process.env.ICON_MAP} **Could not find current map.**\n\nPlease try again later.`
+      );
+      return;
+    }
 
     const registeredPlayer = await PlayerSchema.findOne({ userId });
     if (!registeredPlayer) {
@@ -32,13 +39,12 @@ module.exports = {
 
     const existingChallenge = await DailyChallenge.findOne({
       userId,
-      date: today,
     });
     if (existingChallenge) {
       const existingChallengeEmbed = new EmbedBuilder()
         .setColor(0xff0000)
         .setDescription(
-          `### ${process.env.ICON_BLOCK} **You’ve already joined today’s challenge**\n\nComplete your game on **${mapName}** and use </submit:1373216244169441321> when ready`
+          `### ${process.env.ICON_BLOCK} **You’ve already joined today’s challenge**\n\nComplete your game on **${currentMap}** and use </submit:1373216244169441321> when ready`
         );
 
       await interaction.editReply({
@@ -108,7 +114,7 @@ module.exports = {
     const startedEmbed = new EmbedBuilder()
       .setColor("Green")
       .setDescription(
-        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map **${mapName}** then use </submit:1373216244169441321>`
+        `### ${process.env.ICON_CHECK} **You have joined today's challenge!**\n\nPlay **1** game of **Solo** Bedwars on the map **${currentMap}** then use </submit:1373216244169441321>`
       );
 
     await interaction.editReply({

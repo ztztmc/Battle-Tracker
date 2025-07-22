@@ -10,6 +10,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const mongoose = require("mongoose");
 const { startPoolUpdaterCron } = require("./task/updateRotation.js");
+const { startDailyResetCron } = require("./task/dailyReset.js");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -51,6 +52,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   botStartupLogChannel.send(`## ${process.env.ICON_REFRESH} **Bot Restarted**`);
 
   startPoolUpdaterCron(client);
+  startDailyResetCron(client);
 });
 
 //cooldown

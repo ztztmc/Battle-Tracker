@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
+const GlobalData = require("../../models/globalData.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,11 +8,17 @@ module.exports = {
 
   async execute(interaction) {
     await interaction.deferReply();
-    const userId = interaction.user.id;
-    const username = interaction.user.username;
+
+    let { currentMap } = await GlobalData.findOne({});
+    if (!currentMap) {
+      await interaction.editReply(
+        `### ${process.env.ICON_MAP} **Could not find current map.**\n\nPlease try again later.`
+      );
+      return;
+    }
 
     await interaction.editReply(
-      `(testing map command) \nUser ID: ${userId}\nUsername: ${username}\n`
+      `### ${process.env.ICON_MAP} **Today's Map: ** \`${currentMap}\``
     );
   },
 };

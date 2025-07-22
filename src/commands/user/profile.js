@@ -86,10 +86,10 @@ const drawProfileCard = async (username, player) => {
   }
   ctx.font = `54px satoshi`;
   ctx.fillStyle = "#a6d3a6ff";
-  drawCenteredText(ctx, points.toString(), 455, 175);
-  drawCenteredText(ctx, rank.toString(), 672, 175);
-  drawCenteredText(ctx, gamesSubmitted.toString(), 455, 350);
-  drawCenteredText(ctx, fastestTime.toString(), 672, 350);
+  drawCenteredText(ctx, points.toString(), 456, 175);
+  drawCenteredText(ctx, rank.toString(), 671, 175);
+  drawCenteredText(ctx, gamesSubmitted.toString(), 456, 350);
+  drawCenteredText(ctx, fastestTime.toString(), 671, 350);
 
   // if (rank) {
   //   const rankIconPath = `./src/assets/ranks/${rank}.png`;
