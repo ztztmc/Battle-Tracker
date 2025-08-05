@@ -11,7 +11,7 @@ async function startDailyResetCron(client) {
     "0 9 * * *", // 9:00 AM
     async () => {
       const entries = await dailyChallenge
-        .find({ finishedToday: true })
+        .find({ finishedToday: true, disqualified: false })
         .sort({ rawGameTime: 1 })
         .catch((err) => console.error(err));
 
@@ -19,7 +19,7 @@ async function startDailyResetCron(client) {
 
       if (topFive.length === 0) {
         console.log("No entries to process.");
-        process.exit(0);
+        return;
       }
 
       let desc = "";

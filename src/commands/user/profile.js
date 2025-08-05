@@ -21,7 +21,7 @@ const drawProfileCard = async (username, player) => {
 
   // Get UUID
   const uuidRes = await axios.get(
-    `https://api.mojang.com/users/profiles/minecraft/${username}`
+    `https://api.mojang.com/users/profiles/minecraft/${player.minecraftIGN}`
   );
   const uuid = uuidRes.data.id;
 
@@ -42,7 +42,7 @@ const drawProfileCard = async (username, player) => {
 
   let fontSize = BASE_FONT_SIZE;
   ctx.font = `${fontSize}px satoshi`;
-  let nameWidth = ctx.measureText(username).width;
+  let nameWidth = ctx.measureText(player.minecraftIGN).width;
 
   //if (rank) nameWidth += RANK_ICON_SIZE + 10;
 
@@ -51,7 +51,7 @@ const drawProfileCard = async (username, player) => {
     ctx.font = `${fontSize}px satoshi`;
     // nameWidth =
     //   ctx.measureText(username).width + (rank ? RANK_ICON_SIZE + 10 : 0);
-    nameWidth = ctx.measureText(username).width;
+    nameWidth = ctx.measureText(player.minecraftIGN).width;
   }
 
   // Draw username
@@ -65,7 +65,7 @@ const drawProfileCard = async (username, player) => {
   textGradient.addColorStop(1, "#575757FF"); // bottom
   ctx.fillStyle = textGradient;
   ctx.textBaseline = "top";
-  ctx.fillText(username, NAME_X, NAME_Y);
+  ctx.fillText(player.minecraftIGN, NAME_X, NAME_Y);
 
   const date = new Date().toLocaleDateString("en-US", {
     month: "long",

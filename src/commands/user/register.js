@@ -143,10 +143,10 @@ module.exports = {
         const hypDiscNotMatchEmbed = new EmbedBuilder()
           .setColor(0xff0000)
           .setDescription(
-            `### ${process.env.ICON_BLOCK} **Hypixel Discord mismatch**\n\nYour Discord account does not match the Discord account linked to Hypixel.\nLink your Discord account to Hypixel if it's not already linked.`
+            `### ${process.env.ICON_BLOCK} **Hypixel Discord mismatch**\n\nYour Discord account does not match the Discord account linked to Hypixel.\nLink your Discord account to Hypixel if it's not already linked.\n[battletracker.site/faq](https://battletracker.site/faq) for more info.`
           )
           .setFooter({
-            text: `Expected: **${username}**# Found: **${hypDisc}**`,
+            text: `Expected: ${username} Found: ${hypDisc}`,
           });
         await interaction.editReply({
           embeds: [hypDiscNotMatchEmbed],
